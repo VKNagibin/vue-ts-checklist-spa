@@ -1,30 +1,77 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view/>
+    <router-view>
+    </router-view>
 </template>
+<script>
+
+export default {
+}
+</script>
 
 <style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+.appear-enter-active, .appear-leave-active {
+  transition: opacity .3s ease-in;
+
 }
 
-nav {
-  padding: 30px;
+.appear-enter-from, .appear-leave-to {
+  opacity: 0;
+}
 
-  a {
-    font-weight: bold;
-    color: #2c3e50;
+.App {
+  position: relative;
+  min-height: 100vh;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+}
 
-    &.router-link-exact-active {
-      color: #42b983;
-    }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent;
+  font-family: sans-serif;
+}
+
+button, .btn {
+  box-sizing: content-box;
+  padding: 10px 20px;
+  will-change: transform;
+  transition: .2s transform;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 2px solid rgba(128, 128, 128, 0.59);
+
+  &:hover {
+    transform: scale(1.1);
   }
 }
+
+.btn-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+input {
+  will-change: transform;
+  transition: .2s transform;
+  border-radius: 5px;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+li {
+  list-style: none;
+}
+
+@media (max-width: 540px) {
+  html {
+    font-size: 14px;
+  }
+}
+
 </style>

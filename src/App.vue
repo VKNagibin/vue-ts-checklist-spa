@@ -1,12 +1,9 @@
 <template>
+  <div class="App">
     <router-view>
     </router-view>
+  </div>
 </template>
-<script>
-
-export default {
-}
-</script>
 
 <style lang="scss">
 .appear-enter-active, .appear-leave-active {
@@ -20,10 +17,12 @@ export default {
 
 .App {
   position: relative;
+  display: flex;
+  align-items: center;
   min-height: 100vh;
   padding: 40px;
-  display: flex;
-  justify-content: center;
+  gap: 20px;
+  flex-direction: column;
 }
 
 * {
@@ -32,26 +31,6 @@ export default {
   box-sizing: border-box;
   background: transparent;
   font-family: sans-serif;
-}
-
-button, .btn {
-  box-sizing: content-box;
-  padding: 10px 20px;
-  will-change: transform;
-  transition: .2s transform;
-  cursor: pointer;
-  border-radius: 5px;
-  border: 2px solid rgba(128, 128, 128, 0.59);
-
-  &:hover {
-    transform: scale(1.1);
-  }
-}
-
-.btn-group {
-  display: flex;
-  justify-content: flex-end;
-  gap: 20px;
 }
 
 input {

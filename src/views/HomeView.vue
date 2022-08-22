@@ -1,12 +1,15 @@
 <template>
   <div class="component-wrapper">
-    <button class="add-note-btn" @click="createNewNote" aria-label="создать новую заметку">
-      +
-    </button>
-
+    <div class="add-note-btn">
+      <button-component scale="5" @click="createNewNote" >
+        <template v-slot:leftIcon>
+          <b-icon-calendar-plus />
+        </template>
+      </button-component>
+    </div>
     <transition-group tag="div" name="list" class="notes-area">
       <NoteCard
-          v-for="note in getNotesArray()"
+          v-for="note in readNotesArray()"
           :key="note.id"
           v-bind="note"
       />
@@ -16,42 +19,28 @@
 
 <script lang="ts">
 import NoteCard from "../components/NoteCard.vue";
-import Services from "../services/Services";
-import store from "@/store";
-
-import { defineComponent } from 'vue'
-import LocalData from "@/services/LocalData";
+import ButtonComponent from "@/components/ButtonComponent.vue";
+import {defineComponent} from 'vue'
 
 export default defineComponent({
   components: {
     NoteCard,
+    ButtonComponent,
   },
 
 
   methods: {
     createNewNote() {
-      this.services.addNewNote();
+      this.$services.addNewNote();
+      this.$services.updateNotesArray( this.readNotesArray() );
     },
-    getNotesArray() {
-      return this.services.getNotesArray();
+    readNotesArray() {
+      return this.$services.readNotesArray();
     },
   },
 
-  computed: {
-    services() {
-        return new Services(
-            {
-              store: store,
-              router: this.$router,
-              localData: new LocalData(),
-              history: "history",
-            }
-        );
-    }
-  },
-
-  beforeUnmount() {
-    this.services.updateNotesArray( this.getNotesArray() );
+  mounted() {
+    this.$services.getLocalNotesArray();
   },
 
 })

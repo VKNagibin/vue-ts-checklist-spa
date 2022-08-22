@@ -1,15 +1,11 @@
 import ITodo from "@/interfaces/ITodo";
+import { nanoid } from "nanoid";
 
-class Todo {
-    id: string ;
-    checked: boolean;
-    content: string;
-    parentId: string;
+export default class Todo implements ITodo{
+    id: string = nanoid() ;
+    checked: boolean = false;
+    content: string = "Новая задача";
 
-    constructor({ id, checked, content, parentId }: ITodo) {
-        this.id = id;
-        this.checked = checked;
-        this.content = content;
-        this.parentId = parentId;
+    constructor( public parentId: string) {
     }
 }

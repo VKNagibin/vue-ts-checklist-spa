@@ -1,120 +1,85 @@
 <template>
   <div class="note-component-wrapper">
-    <BackwardButton  @backward="backwardHandler"/>
-    <ForwardButton @forward="handleBackward"/>
+    <button-component scale="3" >
+      <template v-slot:leftIcon><BIconSkipBackward /></template>
+    </button-component>
+    <button-component scale="3" >
+      <template v-slot:leftIcon><BIconSkipBackward style="transform: rotate(180deg)" /></template>
+    </button-component>
+
     <div class="note-flex-container">
-    <NoteTitle :noteIndex="this.noteIndex"/>
-    <transition-group
-        class="todo-list"
-        name="list"
-        tag="ul"
-    >
-      <SingleTodo
-          v-for="todo in $store.getters.notesArray[noteIndex].tasks"
-          :id="todo.id"
-          :key="todo.id"
-          :checked="todo.checked"
-          :content="todo.content"
-          :noteIndex="this.noteIndex"
-      />
+      <NoteTitle :id="noteId" />
+      <transition-group
+          class="todo-list"
+          name="list"
+          tag="ul"
+      >
+        <SingleTodo
+            v-for="todo in $services.getNoteTodos(noteId)"
+            :key="todo.id"
+            v-bind="todo"
+        />
       </transition-group>
     </div>
-    <RemoveNoteButton @delete-note="deleteNote"/>
+
+    <button-component scale="3" >
+      <template v-slot:leftIcon><BIconTrashFill /></template>
+    </button-component>
   </div>
+
+  <button-component  content="Отмена" />
+  <button-component @click="redirectToHome" content="Сохранить" />
+
   <teleport to="body">
-    <modal-window v-if="showModal" @usersClick="handleModalAnswer">
-      {{this.deleteRequest ? 'Удалить заметку?' : 'Отменить редактирование?'}}
+    <modal-window v-if="showModal">
     </modal-window>
   </teleport>
-  <CancelButton @cancel="cancelEditHandler"/>
-  <SaveButton @save="saveChanges" ref="save-changes"/>
+
 </template>
 
-<script>
-import NoteTitle from "@/components/NoteTitle";
-import CancelButton from "@/components/Buttons/CancelButton";
-import ForwardButton from "@/components/Buttons/ForwardButton";
-import BackwardButton from "@/components/Buttons/BackwardButton";
-import RemoveNoteButton from "@/components/Buttons/RemoveNoteButton";
+<script lang="ts">
+import { defineComponent } from 'vue'
+import NoteTitle from "@/components/NoteTitle.vue";
+import ButtonComponent from "@/components/ButtonComponent.vue";
 import ModalWindow from "@/components/ConfirmModal.vue";
-import SaveButton from "@/components/Buttons/SaveButton";
-import SingleTodo from "@/components/SingleTodo";
+import SingleTodo from "@/components/SingleTodo.vue";
 
-export default {
+export default defineComponent({
   components: {
+    ButtonComponent,
     NoteTitle,
     SingleTodo,
-    CancelButton,
-    SaveButton,
-    ForwardButton,
-    BackwardButton,
-    RemoveNoteButton,
     ModalWindow,
-    // EditInput,
   },
+
   data() {
     return {
       showModal: false,
-      deleteRequest: false,
-      cancelEditRequest: false,
-      currentNote: [],
-      noteIndex: 0,
-      showInputCount: 0,
     }
   },
+
   methods: {
-    saveChanges() {
-      this.$router.push("/");
+    redirectToHome() {
+      this.$services.redirectTo("/");
     },
+  },
 
-    cancelEditHandler() {
-      this.showModal = true;
-      this.cancelEditRequest = true;
-    },
-
-    deleteNote() {
-      this.showModal = true;
-      this.deleteRequest = true;
-    },
-
-    handleModalAnswer(answer) {
-      if(this.deleteRequest && answer) {
-        this.$router.push('/');
-        setTimeout(() => {
-          this.$store.dispatch("deleteNote", this.noteIndex);
-        })
-      }
-
-      if(this.cancelEditRequest && answer) {
-        this.$store.dispatch("cancelEditRequest",  this.noteIndex);
-        this.$router.push('/');
-      }
-
-      this.showModal = false;
-    },
-
-    backwardHandler() {
-      this.$store.dispatch("removeNoteChanges", this.noteIndex);
-    },
-
-    handleBackward() {
-      this.$store.dispatch("repeatRemovedChanges", this.noteIndex);
-    },
+  computed: {
+    noteId() {
+      return this.$services.getRouteId();
+    }
   },
 
   beforeMount() {
-    this.currentNote = this.$store.getters.notesArray.find(item => this.$route.params.noteId === item.noteId);
-    this.noteIndex = this.$store.getters.notesArray.findIndex(item => this.currentNote === item);
-    this.$store.dispatch("saveNoteState", this.noteIndex);
-  },
-  beforeUpdate() {
-    localStorage.setItem("notesArray", JSON.stringify(this.$store.getters.notesArray));
+    this.$services.getLocalNotesArray();
   },
 
-  beforeUnmount() {
-    this.$store.dispatch("clearSavedNoteState");
+  updated() {
+    const todoArray = this.$services.getNoteTodos(this.noteId);
+
+
   }
-}
+})
 </script>
 
 <style lang="scss" scoped>
@@ -132,6 +97,7 @@ export default {
   .note-component-wrapper {
     width: 80%;
     display: flex;
+    justify-content: center;
     align-items: center;
   }
   

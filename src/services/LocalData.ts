@@ -1,12 +1,14 @@
 import INote from "@/interfaces/INote";
 
 export default class LocalData {
-    getNotesArray(): INote[] | null {
-        return LocalData.#getStorageItem<INote[]>("notesArray");
+    getNotesArray(): INote[] | [] {
+        const localNotesArray = LocalData.#getStorageItem<INote[]>("notesArray");
+        if ( !localNotesArray ) return [];
+        return localNotesArray
     }
 
     setNotesArray(value: INote[]): void {
-        return LocalData.#setStorageItem<INote[]>('notesArray', value)
+        LocalData.#setStorageItem<INote[]>('notesArray', value);
     }
 
     static #getStorageItem<Type>(item: string): Type | null {
@@ -17,7 +19,6 @@ export default class LocalData {
 
     static #setStorageItem<Type>(name: string, value: Type): void {
         const preparedItem = JSON.stringify(value);
-        console.log(preparedItem);
         localStorage.setItem(name, preparedItem);
     }
 }

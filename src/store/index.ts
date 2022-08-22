@@ -1,6 +1,6 @@
 import { createStore } from 'vuex'
-import todosModule from "@/store/modules/todosModule/todosModule";
-import notesModule from "@/store/modules/notesModule/notesModule";
+import todosModule from "@/store/modules/todosModule";
+import notesModule from "@/store/modules/notesModule";
 
 const store = createStore({
   modules: {

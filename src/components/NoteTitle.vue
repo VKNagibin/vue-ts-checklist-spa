@@ -1,75 +1,81 @@
 <template>
   <div class="note-title">
-    <button-component scale="3" @click="createTodo">
-      <template v-slot:leftIcon><BIconPlusCircle /></template>
-    </button-component>
-    <h2 class="todo-heading"
-        :id="$props.id"
-        @click="handleClick"
+
+    <h2
+        class="todo-heading"
+        :id="headingId"
     >
       {{ heading }}
     </h2>
 
-    <button-component scale="3">
-      <BIconPencilFill />
+    <button-component
+        scale="3"
+        hover-transform=".5"
+        @click.stop="() => {showInput = true}"
+    >
+      <template v-slot:leftIcon>
+        <BIconPencilSquare />
+      </template>
     </button-component>
 
-<!--  <EditInput-->
-<!--      @hideInput="handler"-->
-<!--      :showInput="showInput"-->
-<!--      :componentId="id"-->
-<!--      :content="content"-->
-<!--  />-->
+    <EditInput
+        v-if="showInput"
+        :id="headingId"
+        :content="heading"
+        @saveInputContent="setEditInputContent"
+        @closeEditInput="() => {showInput = false}"
+    />
+
     </div>
 </template>
 
 <script>
 import ButtonComponent from "@/components/ButtonComponent";
+import EditInput from "@/components/EditInput";
 
 export default {
-  props: {
-    id: String,
-  },
-
   components: {
     ButtonComponent,
+    EditInput,
   },
 
   data() {
     return {
       showInput: false,
+      heading: this.getHeading(),
+      id: this.getNoteId(),
+      headingId: this.getNoteId() + "xyz",
     }
   },
 
   methods: {
-    handler() {
+    setEditInputContent(content) {
       this.showInput = false;
+      this.heading = content;
+
+      this.$services.editNoteHeading(
+          {
+            id: this.id,
+            content,
+          }
+      );
     },
 
-    createTodo() {
-      this.$services.createTodo(this.$route.params.id);
+    getNoteId() {
+      return this.$route.params.id;
     },
 
-
-
-    handleClick() {
-      this.showInput = true;
-    }
-  },
-
-  computed: {
-    heading() {
+    getHeading() {
       return this.$services.getNoteHeadingById(this.$route.params.id);
-    }
-  },
-
-  beforeMount() {
-    this.$services.getLocalNotesArray();
+    },
   },
 }
 </script>
 
 <style scoped>
+  h2 {
+    position: relative;
+  }
   .note-title {
     display: flex;
     gap: 40px;

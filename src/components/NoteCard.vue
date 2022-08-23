@@ -4,24 +4,37 @@
     <div class="note-flex-container">
       <h2 class="todo-heading">{{heading}}</h2>
       <ul class="todo-list">
-        <li class="todo-list__item" v-for="todo in currentNoteTodos()" :key="todo.id">
-          <input type="checkbox" class="todo-list__checkbox" disabled :checked="todo.checked">
-          <span class="todo-list__span span_home-page">{{todo.content}}</span>
+        <li
+            class="todo-list-item"
+            v-for="todo in shortcutTodosArray()"
+            :key="todo.id"
+            :class="{checked: todo.checked}"
+        >
+          <input type="checkbox" class="todo-checkbox" disabled :checked="todo.checked">
+          <span class="todo-content">{{todo.content}}</span>
         </li>
       </ul>
     </div>
 
     <div class="note-buttons-group">
-      <button-component scale="3">
+      <button-component
+          scale="3"
+          @click="handleDeleteButtonClick"
+          hover-transform=".5"
+      >
         <template v-slot:leftIcon><BIconTrashFill /></template>
       </button-component>
-      <button-component scale="3" @click="redirectToEditNotePage">
+      <button-component
+          scale="3"
+          @click="redirectToEditNotePage"
+          hover-transform=".5"
+      >
         <template v-slot:leftIcon><BIconPencilSquare /></template>
       </button-component>
     </div>
 
   <teleport to="body">
-    <confirm-modal v-if="showModal" @response="(response) => handleModalAnswer(response)">
+    <confirm-modal v-if="showModal" @response="handleModalAnswer">
       Вы точно хотите удалить заметку?
     </confirm-modal>
   </teleport>
@@ -41,54 +54,47 @@ export default defineComponent({
     ButtonComponent,
   },
 
-  props: {
-    todos: Array,
-    heading: String,
-    id: String,
-    parentId: String,
-  },
-
   data() {
     return {
-      to: `/note/${this.$props.id}`,
       showModal: false,
-      deleteRequest: false
     }
   },
 
+  props: {
+    todos: {
+      type: Array,
+      required: true,
+    },
+    heading: {
+      type: String,
+      required: true,
+    },
+    id: {
+      type: String,
+      required: true,
+    },
+  },
+
   methods: {
-    currentNoteTodos(): ITodo[] {
-      const todos = (this.$props.todos) as ITodo[];
-      if(!todos.length) return todos;
+    handleDeleteButtonClick() {
+      this.showModal = true;
+    },
+    shortcutTodosArray(): ITodo[] {
+      const todos = this.$services.getCurrentNoteTodosFromStore(this.$props.id);
       return todos.slice(0, 3);
     },
-    handleModalAnswer(answer: boolean) {
-      if (this.deleteRequest && answer) {
-        // let noteIndex = this.$store.getters.notesArray.findIndex(item => item.id === this.id);
-        // this.$store.dispatch("deleteNote", noteIndex);
-      }
+
+    handleModalAnswer(response: boolean) {
       this.showModal = false;
+      if (!response) return;
+      this.$services.removeNoteWithChildren(this.$props.id);
     },
 
     redirectToEditNotePage() {
       if ( !this.$props.id) return
-      this.to = `/note/${this.id}`;
-      this.$services.redirectTo(this.to);
-      this.$services.setRouteId(this.$props.id);
+      this.$services.redirectTo(`/note/${this.id}`);
     },
-
-    deleteNote() {
-      this.showModal = true;
-      this.deleteRequest = true;
-    }
   },
-
-  // updated() {
-  //   this.$services.updateNotesArray(
-  //
-  //   )
-  // }
-  //
 })
 
 </script>
@@ -131,7 +137,7 @@ export default defineComponent({
     gap: 40px;
     width: 100%;
 
-    &__item {
+    &-item {
       width: 100%;
       font-size: 2rem;
       display: flex;
@@ -141,7 +147,7 @@ export default defineComponent({
       word-break: break-word;
     }
 
-    &__span {
+    .todo-content {
       display: block;
       max-width: 600px;
       text-align: left;
@@ -150,7 +156,7 @@ export default defineComponent({
       border-radius: 10px;
     }
 
-    &__checkbox {
+    .todo-checkbox {
       transform: scale(2.5);
       transition: .2s;
       cursor: pointer;
@@ -161,8 +167,11 @@ export default defineComponent({
     }
   }
 
-  @media (max-width: 540px) {
+  .checked {
+    opacity: .5;
+  }
 
+  @media (max-width: 540px) {
     .note-component-wrapper {
       width: 95%;
     }

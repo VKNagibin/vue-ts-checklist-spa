@@ -1,45 +1,56 @@
 <template>
-  <li class="todo-list__item">
+  <li class="todo-list-item">
     <input
         type="checkbox"
-        class="todo-list__checkbox"
-        v-model="isChecked"
-        @change="handleCheckbox"
+        class="todo-checkbox"
+        :checked="isChecked"
         aria-label="отметить как выполненное"
+        @change="handleCheckboxChange"
     >
     <span
-        class="todo-list__span"
-        ref="span"
+        @click="handleTodoClick"
+        class="todo-content"
         :id="id"
-        :class="{['done-todo']: checked}"
-        @click="handleClick"
+        :class="{checked: isChecked}"
     >
-      {{content}}
+      {{todoContent}}
     </span>
-    <div class="btn-group task-btns">
-      <button-component @click="handleClick">
-        <BIconTrashFill />
-      </button-component>
-      <button-component>
-        <BIconTrashFill />
-      </button-component>
-    </div>
 
-<!--    <EditInput-->
-<!--        :showInput="showInput"-->
-<!--        @hideInput="handler"-->
-<!--        :componentId="id"-->
-<!--        :content="content"-->
-<!--    />-->
+      <button-component
+          scale="2"
+          @click="handleDeleteButtonClick"
+          hover-transform=".5"
+      >
+        <template v-slot:leftIcon>
+          <BIconTrashFill />
+        </template>
+      </button-component>
+
+      <button-component scale="2" hover-transform=".5">
+        <template v-slot:leftIcon>
+          <BIconPencilSquare />
+        </template>
+      </button-component>
+
+    <EditInput
+        v-if="showInput"
+        :id="$props.id"
+        :value="todoContent"
+        @closeEditInput="() => {showInput = false}"
+        @saveInputContent="setEditInputContent"
+    />
   </li>
 </template>
 
 <script>
+import EditInput from "@/components/EditInput";
 import ButtonComponent from "@/components/ButtonComponent";
+import { defineComponent } from 'vue'
 
-export default {
+export default defineComponent({
   components: {
-    ButtonComponent
+    ButtonComponent,
+    EditInput,
   },
 
   emits: ["edit"],
@@ -48,57 +59,55 @@ export default {
     id: String,
     checked: Boolean,
     content: String,
-    parentid: String,
   },
 
   data() {
     return {
+      isChecked: this.$props.checked ,
       showInput: false,
-      isChecked: this.$props.checked,
+      todoContent: this.$props.content,
     }
   },
 
   methods: {
-    handleCheckbox() {
-      this.$store.dispatch("doneTask",
+    setEditInputContent(content) {
+      this.showInput = false;
+      this.todoContent = content;
+      this.$services.editTodoContent(
           {
-            noteIndex: this.noteIndex,
-            taskId: this.id,
-            isChecked: this.isChecked,
-          });
+            id: this.$props.id,
+            content,
+          }
+      )
     },
-
-    deleteTask(e, id) {
-      this.$store.dispatch("deleteTask", {
-        noteIndex: this.noteIndex,
-        taskId: id,
-      });
-    },
-
-    handleClick() {
+    handleTodoClick() {
       this.showInput = true;
-    }
-  },
-  beforeUpdate() {
-    localStorage.setItem("notesArray", JSON.stringify(this.$store.getters.notesArray));
-  },
-}
+    },
+    handleCheckboxChange() {
+      this.$services.handleTodoCheckbox(this.$props.id);
+      this.isChecked = !this.isChecked;
+    },
+
+    handleDeleteButtonClick() {
+      this.$services.deleteTodo(this.$props.id);
+    },
+  }
+})
 </script>
 
 <style lang="scss" scoped>
-  .todo-list {
+  .todo-list-item {
+    justify-content: center;
+  }
+
+  .checked {
+    opacity: .5;
+  }
+
+  .todo-content {
     position: relative;
-
-    &__span {
-       z-index: 1;
-       position: relative;
-       font-size: 1.5rem;
-       width: 70%;
-     }
-
-    &__item {
-       justify-content: center;
-     }
+    font-size: 1.5rem;
+    width: 70%;
   }
 
   .done-todo {

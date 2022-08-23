@@ -5,14 +5,9 @@ import store from '../src/store'
 import { BootstrapIconsPlugin } from 'bootstrap-icons-vue';
 import appService from "@/plugins/appServices";
 
-createApp(App)
+export const app = createApp(App)
     .use(router)
     .use(appService)
     .use(store)
     .use(BootstrapIconsPlugin)
     .mount('#app')
-
-
-
-
-

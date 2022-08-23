@@ -2,6 +2,7 @@ import ILocalData from "@/interfaces/ILocalData";
 import {StoreType} from "@/store";
 import IRouter from "@/interfaces/IRouter";
 import INote from "@/interfaces/INote";
+import ITodo from "@/interfaces/ITodo";
 
 export interface IConstructor {
     localData: ILocalData,
@@ -11,21 +12,27 @@ export interface IConstructor {
 }
 
 export default interface IServices {
-    readNotesArray(): INote[],
+    getNotesArrayFromStore(): INote[],
 
-    getLocalNotesArray(): void,
+    getTodosArrayFromStore(): ITodo[],
+
+    updateLocalTodos(): void,
+
+    setDataFromLocalToStore(): void,
+
+    getCurrentNoteTodosFromStore(id: string): ITodo[],
 
     addNewNote(): void,
 
-    updateNotesArray(value: INote[]): void,
+    removeNoteWithChildren(id: string): void,
+
+    updateLocalNotesArray(): void,
+
+    handleTodoCheckbox(id: string): void,
 
     redirectTo(path: string): void,
 
-    setRouteId(id: string): void
-
-    getRouteId(): string,
-
-    getNoteTodos(id: string): void,
+    updateCurrentNoteTodos(id: string): void,
 
     getNoteHeadingById(id: string): string,
 

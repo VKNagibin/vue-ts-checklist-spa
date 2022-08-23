@@ -1,12 +1,11 @@
 <template>
   <button
       :style="{transform: `scale(${buttonScale})`}"
-      @click="(e) => handleClick(e)"
       @mouseenter="(e) => handleMouseEnter(e)"
       @mouseleave="(e) => handleMouseLeave(e)"
   >
     <slot name="leftIcon"></slot>
-    {{content}}
+    <slot></slot>
     <slot name="rightIcon"></slot>
   </button>
 </template>
@@ -21,9 +20,9 @@ export default defineComponent({
     scale: {
       required: false,
     },
-    content: {
-      required: false,
+    hoverTransform: {
       type: String,
+      required: false,
     }
   },
 
@@ -34,11 +33,9 @@ export default defineComponent({
   },
 
   methods: {
-    handleClick(e) {
-    },
-
     handleMouseEnter(e) {
-      e.currentTarget.style.transform = `scale(${+this.buttonScale + .5})`;
+      e.currentTarget.style.transform =
+          `scale(${+this.buttonScale + this.hoverTransform})`;
     },
 
     handleMouseLeave(e) {
@@ -46,9 +43,6 @@ export default defineComponent({
     }
 
   }
-
-
-
 })
 </script>
 
@@ -61,7 +55,6 @@ export default defineComponent({
     will-change: transform;
     transition: .2s transform;
     cursor: pointer;
-    z-index: 10;
     border: none;
   }
 </style>

@@ -1,34 +1,47 @@
 <template>
   <div class="note-component-wrapper">
-    <button-component scale="3" >
+    <button-component
+        scale="3"
+        hover-transform=".5">
       <template v-slot:leftIcon><BIconSkipBackward /></template>
     </button-component>
-    <button-component scale="3" >
+    <button-component scale="3" hover-transform=".5">
       <template v-slot:leftIcon><BIconSkipBackward style="transform: rotate(180deg)" /></template>
     </button-component>
 
     <div class="note-flex-container">
       <NoteTitle :id="noteId" />
+      <button-component
+          scale="3"
+          @click="createTodo"
+          hover-transform=".5"
+          >
+        <template v-slot:leftIcon><BIconPlusCircle /></template>
+      </button-component>
       <transition-group
           class="todo-list"
           name="list"
           tag="ul"
       >
         <SingleTodo
-            v-for="todo in $services.getNoteTodos(noteId)"
+            v-for="todo in getCurrentNoteTodos()"
             :key="todo.id"
             v-bind="todo"
         />
       </transition-group>
     </div>
 
-    <button-component scale="3" >
+    <button-component scale="3" hover-transform=".5">
       <template v-slot:leftIcon><BIconTrashFill /></template>
     </button-component>
   </div>
 
-  <button-component  content="Отмена" />
-  <button-component @click="redirectToHome" content="Сохранить" />
+  <button-component  content="Отмена" hover-transform=".2"/>
+  <button-component
+      @click="redirectToHome"
+      content="Сохранить"
+      hover-transform=".2"
+  />
 
   <teleport to="body">
     <modal-window v-if="showModal">
@@ -55,30 +68,31 @@ export default defineComponent({
   data() {
     return {
       showModal: false,
+      noteId: this.$route.params.id as string,
     }
   },
 
   methods: {
+    createTodo() {
+      this.$services.createTodo(this.noteId);
+      this.$services.updateLocalTodos();
+    },
     redirectToHome() {
       this.$services.redirectTo("/");
     },
-  },
 
-  computed: {
-    noteId() {
-      return this.$services.getRouteId();
+    getCurrentNoteTodos() {
+      return this.$services.getCurrentNoteTodosFromStore(this.noteId);
     }
   },
 
-  beforeMount() {
-    this.$services.getLocalNotesArray();
+  beforeUnmount() {
+    this.$services.updateLocalNotesArray();
   },
 
-  updated() {
-    const todoArray = this.$services.getNoteTodos(this.noteId);
-
-
-  }
+  beforeMount() {
+    this.$services.setDataFromLocalToStore();
+  },
 })
 </script>
 

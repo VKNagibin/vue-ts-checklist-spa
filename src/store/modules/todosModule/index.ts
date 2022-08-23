@@ -1,5 +1,6 @@
 import ITodo from "@/interfaces/ITodo";
 import Todo from "@/services/Todo"
+import {IDataEditing} from "@/interfaces/IDataEditing";
 
 interface IState {
     todos: ITodo[],
@@ -27,10 +28,34 @@ export default {
             state.todos = [...state.todos, new Todo(parentId)];
         },
 
+        EDIT_TODO_CONTENT(
+            state: IState,
+            { id, content } : IDataEditing
+        ) {
+            const currentTodoIndex = findTodoIndex(state, id);
+            state.todos[currentTodoIndex].content = content;
+        },
+
+        HANDLE_TODO_CHECKBOX(state: IState, id: string) {
+            const index = findTodoIndex(state, id);
+            if (index === -1) return
+            state.todos[index].checked = !state.todos[index].checked;
+        },
+
         DELETE_TODO(state: IState, id: string) {
             const todoIndex = findTodoIndex(state, id);
             deleteNote(state, todoIndex);
         },
+
+        REMOVE_DELETED_NOTE_CHILDREN(state: IState, id: string) {
+            if (!state.todos.length) return
+            const actualTodos = state.todos.filter(todo => todo.parentId !== id);
+            state.todos = [...actualTodos];
+        },
+
+        SET_TODOS_FROM_LOCAL(state: IState, localTodos: ITodo[]) {
+            state.todos = [...localTodos];
+        }
     },
     actions: {
         createTodo({ commit }: any, parentId: string) {
@@ -39,10 +64,25 @@ export default {
         deleteTodo({ commit }: any, id: string) {
             commit("DELETE_TODO", id);
         },
+        editTodoContent(
+            { commit }: any,
+            { id, content }: IDataEditing
+        ) {
+            commit("EDIT_TODO_CONTENT", {id, content});
+        },
+        setTodosFromLocal({ commit }: any, localTodos: ITodo[]) {
+            commit("SET_TODOS_FROM_LOCAL", localTodos);
+        },
+        removeDeletedNoteChildren({ commit }: any, id: string) {
+            commit("REMOVE_DELETED_NOTE_CHILDREN", id);
+        },
+        handleTodoChecked({ commit }: any, id: string) {
+            commit("HANDLE_TODO_CHECKBOX", id);
+        }
     },
     getters: {
-        getNoteTodos:(state: IState) => (parentId: string) => filterTodosById(state, parentId),
-
+        currentNoteTodos:(state: IState) => (parentId: string) => filterTodosById(state, parentId),
+        todos: (state: IState) =>  state.todos,
     }
 
 }

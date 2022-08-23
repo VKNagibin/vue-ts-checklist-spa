@@ -1,24 +1,14 @@
 import INote from "@/interfaces/INote";
 import Note from "@/services/Note";
+import {IDataEditing} from "@/interfaces/IDataEditing";
+import {
+    findNoteIndex,
+    deleteNote,
+    findArrayElement
+} from "@/store/modules/notesModule/utilities";
 
-interface IState {
+export interface IState {
     notesArray: INote[]
-}
-
-const findNoteIndex = (state: IState, id: string) => (
-    state.notesArray.findIndex(item => item.id === id)
-)
-
-const findArrayElement = (state: IState, id: string) => {
-    return state.notesArray.find(item => {
-        return item.id === id
-    })
-}
-
-
-function deleteNote(state: IState, index: number) {
-    if ( index === -1) return
-    state.notesArray.splice(index, 1);
 }
 
 export default {
@@ -35,32 +25,38 @@ export default {
             const noteIndex = findNoteIndex(state, id);
             deleteNote(state, noteIndex);
         },
-        GET_LOCAL_NOTES_ARRAY(state: IState, localNotesArray: INote[]) {
+        EDIT_NOTE_HEADING(state: IState, { id, content }: IDataEditing ) {
+            const currentNoteIndex = findNoteIndex(state, id);
+            state.notesArray[currentNoteIndex].heading = content;
+        },
+        SET_NOTES_FROM_LOCAL(state: IState, localNotesArray: INote[]) {
             state.notesArray = [ ...localNotesArray ];
-        }
+        },
     },
 
     actions: {
         addNewNote({ commit }: any) {
             commit("ADD_NEW_NOTE");
         },
+        editNoteHeading({ commit }: any, { id, content }: IDataEditing) {
+            commit("EDIT_NOTE_HEADING", { id, content });
+        },
         deleteNote({ commit }: any, id: string) {
             commit("DELETE_NOTE", id);
         },
-        getLocalNotesArray({ commit }: any, localNotesArray: INote[]) {
-            commit("GET_LOCAL_NOTES_ARRAY", localNotesArray);
+        setNotesFromLocal({ commit }: any, localNotesArray: INote[]) {
+            commit("SET_NOTES_FROM_LOCAL", localNotesArray);
         },
     },
 
     getters: {
-        notesArray(state: IState) {
+        notes(state: IState) {
             return state.notesArray;
         },
-        noteHeading:(state: IState) => (id: string) => {
+        note:(state: IState) => (id: string) => {
             const note = findArrayElement(state, id);
             if (!note) return
-            return note.heading;
+            return note;
         }
     }
-
 }

@@ -1,7 +1,11 @@
 <template>
   <div class="component-wrapper">
     <div class="add-note-btn">
-      <button-component scale="5" @click="createNewNote" >
+      <button-component
+          scale="5"
+          @click="createNewNote"
+          hover-transform=".5"
+      >
         <template v-slot:leftIcon>
           <b-icon-calendar-plus />
         </template>
@@ -9,7 +13,7 @@
     </div>
     <transition-group tag="div" name="list" class="notes-area">
       <NoteCard
-          v-for="note in readNotesArray()"
+          v-for="note in getNotesArray()"
           :key="note.id"
           v-bind="note"
       />
@@ -28,19 +32,18 @@ export default defineComponent({
     ButtonComponent,
   },
 
-
   methods: {
     createNewNote() {
       this.$services.addNewNote();
-      this.$services.updateNotesArray( this.readNotesArray() );
+      this.$services.updateLocalNotesArray();
     },
-    readNotesArray() {
-      return this.$services.readNotesArray();
+    getNotesArray() {
+      return this.$services.getNotesArrayFromStore();
     },
   },
 
-  mounted() {
-    this.$services.getLocalNotesArray();
+  beforeMount() {
+    this.$services.setDataFromLocalToStore();
   },
 
 })

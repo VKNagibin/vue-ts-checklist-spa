@@ -80,7 +80,7 @@ export default defineComponent({
       this.showModal = true;
     },
     shortcutTodosArray(): ITodo[] {
-      const todos = this.$services.getCurrentNoteTodosFromStore(this.$props.id);
+      const todos = this.$services.getNoteFromStore(this.$props.id).todos;
       return todos.slice(0, 3);
     },
 
@@ -95,8 +95,11 @@ export default defineComponent({
       this.$services.redirectTo(`/note/${this.id}`);
     },
   },
-})
 
+  beforeMount() {
+    this.$services.setDataFromLocalToStore();
+  },
+})
 </script>
 
 <style lang="scss">
@@ -118,7 +121,7 @@ export default defineComponent({
     border: 2px solid rgba(141, 141, 141, 0.49);
 
     .todo-heading {
-      font-size: 4rem;
+      font-size: 2rem;
       text-align: center;
     }
   }

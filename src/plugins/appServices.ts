@@ -3,6 +3,7 @@ import store from "../store";
 import router from "../router";
 import LocalData from "../services/LocalData";
 import {App} from "vue";
+import History from "@/services/History";
 
 export default {
     install: (app: App) => {
@@ -10,7 +11,7 @@ export default {
                 {
                     store: store,
                     router: router,
-                    history: "history",
+                    history: new History(),
                     localData: new LocalData(),
                 })
         }

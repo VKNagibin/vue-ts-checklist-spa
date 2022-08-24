@@ -1,17 +1,18 @@
 <template>
   <div class="note-title">
-
     <h2
         class="todo-heading"
-        :id="headingId"
+        :id="validHTMLId()"
+        @click.stop="() => {showInput = true}"
     >
-      {{ heading }}
+      {{ getHeading() }}
     </h2>
 
     <button-component
         scale="3"
         hover-transform=".5"
         @click.stop="() => {showInput = true}"
+        class="edit-heading-button"
     >
       <template v-slot:leftIcon>
         <BIconPencilSquare />
@@ -20,8 +21,8 @@
 
     <EditInput
         v-if="showInput"
-        :id="headingId"
-        :content="heading"
+        :id="validHTMLId()"
+        :content="getHeading()"
         @saveInputContent="setEditInputContent"
         @closeEditInput="() => {showInput = false}"
     />
@@ -42,7 +43,6 @@ export default {
   data() {
     return {
       showInput: false,
-      heading: this.getHeading(),
       id: this.getNoteId(),
       headingId: this.getNoteId() + "xyz",
     }
@@ -51,13 +51,16 @@ export default {
   methods: {
     setEditInputContent(content) {
       this.showInput = false;
-      this.heading = content;
 
       this.$services.editNoteHeading(
           {
             id: this.id,
             content,
           }
+      );
+
+      this.$services.saveNoteState(
+          this.$services.getNoteFromStore(this.id)
       );
     },
 
@@ -66,7 +69,10 @@ export default {
     },
 
     getHeading() {
-      return this.$services.getNoteHeadingById(this.$route.params.id);
+      return this.$services.getNoteHeadingById(this.getNoteId());
+    },
+    validHTMLId() {
+      return `A${this.id}A`
     },
   },
 }
@@ -75,9 +81,20 @@ export default {
 <style scoped>
   h2 {
     position: relative;
+    width: 80%;
+    word-break: break-all;
+    text-align: center;
+
+  }
+  .edit-heading-button {
+    position: absolute;
+    right: -10px;
   }
   .note-title {
+    position: relative;
+    width: 100%;
     display: flex;
+    justify-content: center;
     gap: 40px;
     align-items: center;
   }

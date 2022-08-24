@@ -3,6 +3,7 @@
       :style="{transform: `scale(${buttonScale})`}"
       @mouseenter="(e) => handleMouseEnter(e)"
       @mouseleave="(e) => handleMouseLeave(e)"
+      ref="button"
   >
     <slot name="leftIcon"></slot>
     <slot></slot>
@@ -17,18 +18,26 @@ export default defineComponent({
   components: {},
 
   props: {
+    focus: Boolean,
     scale: {
       required: false,
     },
     hoverTransform: {
       type: String,
       required: false,
+    },
+    label: {
+      required: false,
+      type: String,
     }
   },
 
   computed: {
     buttonScale() {
       return this.$props.scale || '1';
+    },
+    ariaLabel() {
+      this.$props.label || "";
     }
   },
 
@@ -41,7 +50,11 @@ export default defineComponent({
     handleMouseLeave(e) {
       e.currentTarget.style.transform = `scale(${+this.buttonScale})`;
     }
+  },
 
+  mounted() {
+    if (!this.$props.focus) return
+    this.$refs.button.focus();
   }
 })
 </script>

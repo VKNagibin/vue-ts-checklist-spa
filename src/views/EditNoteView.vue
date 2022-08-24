@@ -1,11 +1,21 @@
 <template>
   <div class="note-component-wrapper">
     <button-component
+        class="previous-step-button"
         scale="3"
-        hover-transform=".5">
-      <template v-slot:leftIcon><BIconSkipBackward /></template>
+        hover-transform=".5"
+        @click="handleBackwardButton"
+    >
+      <template v-slot:leftIcon>
+        <BIconSkipBackward/>
+      </template>
     </button-component>
-    <button-component scale="3" hover-transform=".5">
+    <button-component
+        scale="3"
+        hover-transform=".5"
+        class="next-step-button"
+        @click="handleForwardButton"
+    >
       <template v-slot:leftIcon><BIconSkipBackward style="transform: rotate(180deg)" /></template>
     </button-component>
 
@@ -16,7 +26,7 @@
           @click="createTodo"
           hover-transform=".5"
           >
-        <template v-slot:leftIcon><BIconPlusCircle /></template>
+        <template v-slot:leftIcon><BIconPlusCircle/></template>
       </button-component>
       <transition-group
           class="todo-list"
@@ -31,26 +41,41 @@
       </transition-group>
     </div>
 
-    <button-component scale="3" hover-transform=".5">
+    <button-component
+        scale="3"
+        hover-transform=".5"
+        @click="handleDeleteNoteButton"
+    >
       <template v-slot:leftIcon><BIconTrashFill /></template>
     </button-component>
   </div>
 
-  <button-component  content="Отмена" hover-transform=".2"/>
+  <button-component
+      hover-transform=".2"
+      scale="2"
+      class="leave-edit-page-button"
+      @click="handleCancelEditButton"
+  >
+    Отменить
+  </button-component>
   <button-component
       @click="redirectToHome"
-      content="Сохранить"
       hover-transform=".2"
-  />
+      scale="2"
+      class="save-changes-button"
+  >
+    Сохранить
+  </button-component>
 
   <teleport to="body">
-    <modal-window v-if="showModal">
+    <modal-window v-if="showModal" @response="handleModalResponse">
+      {{ modalMessage }}
     </modal-window>
   </teleport>
 
 </template>
 
-<script lang="ts">
+<script>
 import { defineComponent } from 'vue'
 import NoteTitle from "@/components/NoteTitle.vue";
 import ButtonComponent from "@/components/ButtonComponent.vue";
@@ -68,22 +93,99 @@ export default defineComponent({
   data() {
     return {
       showModal: false,
-      noteId: this.$route.params.id as string,
+      todos: [],
+      noteId: this.$route.params.id,
+      deleteNoteRequest: false,
+      cancelEditRequest: false,
+      modalMessage: "",
     }
   },
 
   methods: {
+    handleBackwardButton() {
+      const note = this.$services.getPreviousChange();
+      if (!note) return
+      this.getNoteState(
+          note
+      )
+    },
+
+    handleForwardButton() {
+      const note = this.$services.getNextChange();
+      if (!note) return
+      this.getNoteState(
+          note
+      )
+    },
+
+    showModalHandler(message) {
+      this.modalMessage = message;
+      this.showModal = true;
+    },
+
+    handleDeleteNoteButton() {
+      this.showModalHandler("Удалить заметку?");
+      this.deleteNoteRequest = true;
+    },
+
+    handleCancelEditButton() {
+      this.showModalHandler("Отменить редактирование?");
+      this.cancelEditRequest = true;
+    },
+
+    handleModalResponse(response) {
+      this.showModal = false;
+      if (this.deleteNoteRequest) return this.deleteNoteHandler(response);
+      this.cancelFromEditPageHandler(response);
+    },
+
+    deleteNoteHandler(response) {
+      if (!response) return
+      this.$services.redirectTo("/");
+      setTimeout(() => {
+        this.$services.removeNoteWithChildren(this.noteId);
+      }, 0);
+    },
+
+    getNoteState(note) {
+      this.$services.replaceNote(
+          {
+            id: this.noteId,
+            note,
+          }
+      )
+      this.$services.replaceTodos(
+          {
+            parentId: this.noteId,
+            todos: this.$services.getNoteFromStore(this.noteId).todos,
+          }
+      )
+    },
+
+    cancelFromEditPageHandler(response) {
+      if (!response) return
+      this.getNoteState(
+          this.$services.getInitialNoteState()
+      );
+      this.$services.redirectTo("/");
+    },
+
     createTodo() {
       this.$services.createTodo(this.noteId);
-      this.$services.updateLocalTodos();
+      this.$services.setCurrentNoteTodos(this.noteId);
+      this.$services.saveNoteState(
+          this.$services.getNoteFromStore(this.noteId)
+      );
     },
+
     redirectToHome() {
       this.$services.redirectTo("/");
     },
 
     getCurrentNoteTodos() {
-      return this.$services.getCurrentNoteTodosFromStore(this.noteId);
-    }
+      return this.$services.setCurrentNoteTodos(this.noteId);
+    },
+
   },
 
   beforeUnmount() {
@@ -92,6 +194,12 @@ export default defineComponent({
 
   beforeMount() {
     this.$services.setDataFromLocalToStore();
+    this.$services.setInitialNoteState(
+        this.$services.getNoteFromStore(this.noteId)
+    );
+    this.getNoteState(
+        this.$services.getInitialNoteState()
+    );
   },
 })
 </script>
@@ -106,6 +214,20 @@ export default defineComponent({
   .list-enter-active,
   .list-leave-active {
     transition: all .3s ease-in-out;
+  }
+
+  .previous-step-button, .next-step-button {
+    top: 10%;
+    position: fixed;
+    padding: 5px;
+    border: 2px solid rgba(128, 128, 128, 0.43);
+    border-radius: 5px;
+    right: 5%;
+  }
+
+  .previous-step-button {
+    right: auto;
+    left: 5%;
   }
 
   .note-component-wrapper {
@@ -129,93 +251,17 @@ export default defineComponent({
     }
   }
 
-  .create-task-btn {
-    will-change: transform;
-    transition: .2s;
-    padding: 0;
-    transform: scale(2);
-    cursor: pointer;
-    border: none;
-
-    &:hover {
-      transform: scale(2.3);
-    }
-  }
-
-  .todo-list {
-    padding: 0 5%;
-  }
-
-  .edit-task-modal {
-    z-index: 20;
-    display: flex;
-    background: #000;
-    flex-direction: column;
-    gap: 10px;
+  .leave-edit-page-button, .save-changes-button {
     position: fixed;
-    height: 30px;
-    top: 10%;
-    right: 50%;
-    transform: translateX(50%);
-
-    .btn-group {
-      justify-content: flex-end;
-    }
+    bottom: 5%;
+    right: 5%;
+    border: 2px solid grey;
+    padding: 5px;
+    border-radius: 5px;
   }
 
-  .edit-task-btn {
-    box-sizing: content-box;
-    padding: 10px;
-    width: 50px;
-    font-size: 1rem;
-  }
-
-  .edit-note-btns {
-    width: 95%;
-    display: flex;
-    position: fixed;
-    justify-content: space-between;
-    z-index: 11;
-    bottom: 10px;
-    gap: 40px;
-  }
-
-  @media (max-width: 768px) {
-    .note-component-wrapper {
-      width: 100%;
-    }
-
-    .note-flex-container {
-      border: none;
-    }
-
-    .todo-heading {
-      padding-top: 50px;
-    }
-
-    .note-flex-container {
-      padding: 10px 0 20px;
-    }
-
-    .note-title {
-      flex-direction: column-reverse;
-    }
-
-    .task-btns {
-      flex-direction: column;
-    }
-  }
-
-  @media (max-width: 540px) {
-    .todo-heading {
-      padding-top: 70px;
-    }
-
-    .cancel-edit-btn {
-      bottom: 0;
-    }
-    .save-changes-btn {
-      bottom: 50px;
-    }
+  .save-changes-button {
+    right: auto;
+    left: 5%;
   }
 </style>

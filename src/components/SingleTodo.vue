@@ -8,12 +8,12 @@
         @change="handleCheckboxChange"
     >
     <span
-        @click="handleTodoClick"
+        @click="openEditInput"
         class="todo-content"
-        :id="id"
+        :id="validHTMLId()"
         :class="{checked: isChecked}"
     >
-      {{todoContent}}
+      {{ content }}
     </span>
 
       <button-component
@@ -26,7 +26,11 @@
         </template>
       </button-component>
 
-      <button-component scale="2" hover-transform=".5">
+      <button-component
+          scale="2"
+          hover-transform=".5"
+          @click="openEditInput"
+      >
         <template v-slot:leftIcon>
           <BIconPencilSquare />
         </template>
@@ -34,8 +38,8 @@
 
     <EditInput
         v-if="showInput"
-        :id="$props.id"
-        :value="todoContent"
+        :id="validHTMLId()"
+        :content="content"
         @closeEditInput="() => {showInput = false}"
         @saveInputContent="setEditInputContent"
     />
@@ -56,6 +60,7 @@ export default defineComponent({
   emits: ["edit"],
 
   props: {
+    parentId: String,
     id: String,
     checked: Boolean,
     content: String,
@@ -63,7 +68,7 @@ export default defineComponent({
 
   data() {
     return {
-      isChecked: this.$props.checked ,
+      isChecked: this.$props.checked,
       showInput: false,
       todoContent: this.$props.content,
     }
@@ -79,19 +84,45 @@ export default defineComponent({
             content,
           }
       )
+      this.$services.saveNoteState(
+          this.$services.getNoteFromStore(this.$props.parentId)
+      );
+
+      this.$emit("changeTodos");
     },
-    handleTodoClick() {
+
+    getCheckboxStatus() {
+        return this.$services.getSingleTodo(this.$props.id).checked;
+    },
+
+    getTodoContent() {
+      return this.$services.getSingleTodo(this.$props.id).content;
+    },
+
+    openEditInput() {
+      if (this.isChecked) return
       this.showInput = true;
     },
     handleCheckboxChange() {
       this.$services.handleTodoCheckbox(this.$props.id);
-      this.isChecked = !this.isChecked;
+      this.saveNoteState();
+    },
+
+    saveNoteState() {
+      this.$services.setCurrentNoteTodos(this.$props.parentId);
+      this.$services.saveNoteState(
+          this.$services.getNoteFromStore(this.$props.parentId)
+      );
     },
 
     handleDeleteButtonClick() {
       this.$services.deleteTodo(this.$props.id);
+      this.saveNoteState();
     },
-  }
+    validHTMLId() {
+      return `A${this.$props.id}A`
+    },
+  },
 })
 </script>
 

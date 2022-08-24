@@ -2,12 +2,13 @@ import { StoreType } from "@/store";
 import IServices, { IConstructor } from "@/interfaces/IServices";
 import ILocalData from "@/interfaces/ILocalData";
 import IRouter from "@/interfaces/IRouter";
+import IHistory from "@/interfaces/IHistory";
+import {IDataEditing} from "@/interfaces/IDataEditing";
 import INote from "@/interfaces/INote";
 import ITodo from "@/interfaces/ITodo";
-import {IDataEditing} from "@/interfaces/IDataEditing";
 
 export default class Services{
-    #history: string;
+    #history: IHistory;
     #store: StoreType;
     #router: IRouter;
     #localData: ILocalData;
@@ -31,12 +32,33 @@ export default class Services{
         this.#setTodosFromLocalToStore();
     }
 
+    #setNotesFromLocalToStore() {
+        this.#store.dispatch(
+            "setNotesFromLocal",
+            this.#localData.getNotesArray()
+        );
+    }
+
+    getSingleTodo(id: string): ITodo {
+        return this.#store.getters.todo(id);
+    }
+
+    #setTodosFromLocalToStore() {
+        this.#store.dispatch(
+            "setTodosFromLocal",
+            this.#localData.getTodosArray()
+        );
+    }
+
     editNoteHeading({ id, content }: IDataEditing) {
         this.#store.dispatch(
             "editNoteHeading",
             {id, content}
         );
-        this.updateLocalNotesArray();
+    }
+
+    saveNoteState(note: INote) {
+        this.#history.saveNoteState(note);
     }
 
     editTodoContent( { id, content }: IDataEditing) {
@@ -47,26 +69,36 @@ export default class Services{
         this.updateLocalTodos();
     }
 
-    #setNotesFromLocalToStore() {
-        this.#store.dispatch(
-            "setNotesFromLocal",
-            this.#localData.getNotesArray()
-        );
+    replaceNote({ id, note }: {id: string, note: INote}) {
+        this.#store.dispatch("replaceNote",{ id, note });
+    }
+
+    replaceTodos({ parentId, todos }: { parentId: string, todos: ITodo[] }) {
+        this.#store.dispatch("replaceTodos",{ parentId, todos });
     }
 
     getNotesArrayFromStore() {
         return this.#store.getters.notes;
     }
 
-    getTodosArrayFromStore() {
-        return this.#store.getters.todos;
+    getNoteFromStore(id: string) {
+        return this.#store.getters.note(id);
     }
 
-    #setTodosFromLocalToStore() {
-        this.#store.dispatch(
-            "setTodosFromLocal",
-            this.#localData.getTodosArray()
-        );
+    getNextChange() {
+        return this.#history.getNextChange();
+    }
+
+    getPreviousChange() {
+        return this.#history.getPreviousChange();
+    }
+
+    getChangesCounter() {
+        return this.#history.getChangesCounter();
+    }
+
+    getTodosArrayFromStore() {
+        return this.#store.getters.todos;
     }
 
     deleteTodo(id: string) {
@@ -76,14 +108,29 @@ export default class Services{
 
     createTodo(parentId: string) {
         this.#store.dispatch("createTodo", parentId);
-
     }
 
-    getCurrentNoteTodosFromStore(id: string) {
-        return this.#store.getters.currentNoteTodos(id) || [];
+    setCurrentNoteTodos(id: string) {
+        const todos = this.#store.getters.currentNoteTodos(id) || [];
+        this.#store.dispatch(
+            "setCurrentNoteTodos",
+            {
+                id,
+                todos,
+            });
+        return todos;
     }
+
     getNoteHeadingById(id: string) {
         return this.#store.getters.note(id).heading;
+    }
+
+    setInitialNoteState(note: INote) {
+        this.#history.setInitialState(note);
+    }
+
+    getInitialNoteState() {
+        return this.#history.getInitialState();
     }
 
     #deleteNote(id: string) {
@@ -126,6 +173,3 @@ export default class Services{
         this.#router.push(path);
     }
 }
-
-
-

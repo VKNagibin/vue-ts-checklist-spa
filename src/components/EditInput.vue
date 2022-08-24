@@ -1,12 +1,16 @@
 <template>
   <div class="component-wrapper" @click="handleCloseInput">
   </div>
-    <teleport :to="`#${$props.id}r`">
-        <input type="text" v-model="inputValue">
+    <teleport :to="`#${$props.id}`">
+        <input
+            type="text"
+            v-model="inputValue"
+            ref="input"
+        >
         <div class="buttons-group">
           <button-component
             class="button"
-            hover-transform=".3"
+            hover-transform=".1"
             @click.stop="handleSaveButton"
           >
             Сохранить
@@ -14,7 +18,7 @@
 
           <button-component
               class="button"
-              hover-transform=".3"
+              hover-transform=".1"
               @click.stop="handleCloseInput"
           >
             Отмена
@@ -24,9 +28,9 @@
 
 </template>
 
-<script>
-import {defineComponent} from "vue/dist/vue";
-import ButtonComponent from "@/components/ButtonComponent";
+<script lang="ts">
+import {defineComponent} from "vue";
+import ButtonComponent from "@/components/ButtonComponent.vue";
 
 export default defineComponent({
   components: {
@@ -35,16 +39,16 @@ export default defineComponent({
 
   props: {
     id: String,
-    value: String
-  },
-
-  data() {
-    return {
-      inputValue: this.$props.value,
-    }
+    content: String
   },
 
   emits: ["closeEditInput", "saveInputContent"],
+
+  data() {
+    return {
+      inputValue: this.$props.content,
+    }
+  },
 
   methods: {
     handleSaveButton() {
@@ -53,8 +57,11 @@ export default defineComponent({
     handleCloseInput() {
       this.$emit("closeEditInput");
     }
-  }
+  },
 
+  mounted() {
+    (this.$refs["input"] as HTMLInputElement).focus();
+  }
 })
 </script>
 
@@ -74,7 +81,7 @@ export default defineComponent({
     display: flex;
     gap: 20px;
     position: absolute;
-    bottom: -40px;
+    bottom: -60px;
     right: 0;
 
     .button {
@@ -82,6 +89,7 @@ export default defineComponent({
       padding: 5px;
       border: 2px solid grey;
       z-index: 11;
+      font-size: 1.5rem;
       background: white;
     }
   }

@@ -5,24 +5,40 @@
         <slot></slot>
       </h2>
       <div class="button-group">
-        <button :aria-label="label" ref="resolveButton" @click="handleResolveButton">Да</button>
-        <button :aria-label="label" @click="handleRejectButton">Нет</button>
+        <button-component
+            :focus="true"
+            @click="handleResolveButton"
+            hover-transform=".1"
+        >
+          Да
+        </button-component>
+        <button-component
+            @click="handleRejectButton"
+            hover-transform=".1"
+        >
+          Нет
+        </button-component>
       </div>
     </div>
   </div>
 </template>
 
-<script lang="ts">
+<script>
 import { defineComponent } from 'vue'
+import ButtonComponent from "@/components/ButtonComponent.vue";
 
 export default defineComponent({
+  components: {
+    ButtonComponent
+  },
+
   emits: ["response"],
   props: {
     label: String,
   },
 
   methods: {
-    handleResolveButton(): void {
+    handleResolveButton(){
       this.$emit("response", true);
     },
     handleRejectButton() {
@@ -34,10 +50,6 @@ export default defineComponent({
     ariaLabel() {
       return this.$props.label ? this.$props.label : "";
     }
-  },
-
-  mounted() {
-    (this.$refs["resolveButton"] as HTMLButtonElement).focus();
   },
 })
 </script>

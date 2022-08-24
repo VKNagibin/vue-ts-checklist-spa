@@ -1,22 +1,17 @@
 import ITodo from "@/interfaces/ITodo";
 import Todo from "@/services/Todo"
 import {IDataEditing} from "@/interfaces/IDataEditing";
+import { findTodoIndex, filterTodosById, deleteNote } from "@/store/modules/todosModule/utilities";
 
-interface IState {
+export interface IState {
     todos: ITodo[],
 }
 
-const findTodoIndex = (state: IState, id: string) => state.todos.findIndex(todo => todo.id === id);
-
-function deleteNote(state: IState, index: number) {
-    if ( index === -1) return
-    state.todos.splice(index, 1);
+interface IReplaceTodos {
+    parentId: string,
+    todos: ITodo[],
 }
 
-const filterTodosById = (state: IState, parentId: string) => {
-    if (!state.todos.length) return
-    return state.todos.filter(todo => todo.parentId === parentId);
-}
 
 export default {
     state: (): IState => (
@@ -55,7 +50,13 @@ export default {
 
         SET_TODOS_FROM_LOCAL(state: IState, localTodos: ITodo[]) {
             state.todos = [...localTodos];
-        }
+        },
+        REPLACE_TODOS(state: IState,
+                      { parentId, todos }: IReplaceTodos)
+        {
+            const filteredTodos = state.todos.filter(todo => todo.parentId !== parentId);
+            state.todos = [ ...filteredTodos,  ...todos];
+        },
     },
     actions: {
         createTodo({ commit }: any, parentId: string) {
@@ -63,6 +64,11 @@ export default {
         },
         deleteTodo({ commit }: any, id: string) {
             commit("DELETE_TODO", id);
+        },
+        replaceTodos({ commit }: any,
+                     { parentId, todos }: IReplaceTodos)
+        {
+          commit("REPLACE_TODOS", { parentId, todos });
         },
         editTodoContent(
             { commit }: any,
@@ -83,6 +89,10 @@ export default {
     getters: {
         currentNoteTodos:(state: IState) => (parentId: string) => filterTodosById(state, parentId),
         todos: (state: IState) =>  state.todos,
+        todo: (state: IState) => (id: string) => {
+            const todoIndex = findTodoIndex(state, id);
+            return state.todos[todoIndex]
+        },
     }
 
 }
